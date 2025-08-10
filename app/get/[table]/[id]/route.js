@@ -33,7 +33,7 @@ export async function GET(req, { params }) {
   }
 
   try {
-    const result = await pool.query(`SELECT * FROM ${table}; WHERE id = ${id};`);
+    const result = await pool.query(`SELECT * FROM ${table} WHERE id = ${id};`);
     return NextResponse.json(result.rows);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
