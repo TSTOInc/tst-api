@@ -25,14 +25,12 @@ export async function POST(request) {
       load_status = 'new',
       commodity,
       load_type,
-      equipment_type,
       length_ft,
       rate,
       payment_terms_id,
       broker_id,
       instructions = null,
       stops = [],
-      parties = [], // not in schema, ignore or implement separately
       tags = [],
     } = data;
 
@@ -41,7 +39,6 @@ export async function POST(request) {
       !load_number ||
       !commodity ||
       !load_type ||
-      !equipment_type ||
       !length_ft ||
       !rate ||
       !payment_terms_id ||
@@ -58,16 +55,13 @@ export async function POST(request) {
       return NextResponse.json({ error: `Invalid load_type. Must be one of ${VALID_LOAD_TYPES.join(', ')}` }, { status: 400 });
     }
 
-    if (!VALID_EQUIPMENT_TYPES.includes(equipment_type)) {
-      return NextResponse.json({ error: `Invalid equipment_type. Must be one of ${VALID_EQUIPMENT_TYPES.join(', ')}` }, { status: 400 });
-    }
-
     await client.query('BEGIN');
+    
 
     // Insert load
     const loadInsertText = `
       INSERT INTO loads
-        (load_number, invoice_number, load_status, commodity, load_type, equipment_type, length_ft, rate, payment_terms_id, broker_id, instructions)
+        (load_number, invoice_number, load_status, commodity, load_type, length_ft, rate, payment_terms_id, broker_id, instructions)
       VALUES
         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id;
