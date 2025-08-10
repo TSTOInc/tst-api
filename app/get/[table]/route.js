@@ -7,7 +7,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// Allowed tables to prevent SQL injection
 const ALLOWED_TABLES = [
   'broker_payment_terms',
   'brokers',
@@ -33,7 +32,12 @@ export async function GET(req, { params }) {
   }
 
   try {
-    const result = await pool.query(`SELECT * FROM ${table};`);
+    // Use parameterized queries when possible - but here table names can't be parameterized
+    // So whitelist is the best defense
+
+    const queryText = `SELECT * FROM ${table};`;
+    const result = await pool.query(queryText);
+
     return NextResponse.json(result.rows);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
