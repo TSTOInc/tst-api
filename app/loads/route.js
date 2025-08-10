@@ -9,7 +9,7 @@ const pool = new Pool({
 
 export async function GET() {
   try {
-    const result = await pool.query('SELECT * FROM playing_with_neon LIMIT 5;'); 
+    const result = await pool.query('SELECT * FROM loads;'); // Replace 'your_table' with your real table name
     return NextResponse.json(result.rows);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
