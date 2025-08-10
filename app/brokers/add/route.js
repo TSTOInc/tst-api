@@ -21,7 +21,7 @@ export async function POST(request) {
     }
 
     const insertText = `
-      INSERT INTO drivers (image_url, name, usdot_number, docket_number, address, phone, email, website)
+      INSERT INTO brokers (image_url, name, usdot_number, docket_number, address, phone, email, website)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id;
     `;
