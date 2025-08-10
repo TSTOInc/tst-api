@@ -7,6 +7,12 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
+const VALID_LOAD_STATUSES = ['new', 'in_transit', 'delivered', 'invoiced', 'paid'];
+const VALID_LOAD_TYPES = ['FTL', 'LTL'];
+const VALID_EQUIPMENT_TYPES = ['reefer', 'van', 'flatbed'];
+const VALID_STOP_TYPES = ['pickup', 'delivery'];
+const VALID_TIME_TYPES = ['appointment', 'window'];
+
 export async function POST(request) {
   const client = await pool.connect();
 
@@ -15,49 +21,92 @@ export async function POST(request) {
 
     const {
       load_number,
+      invoice_number = null,
+      load_status = 'new',
       commodity,
       load_type,
       equipment_type,
       length_ft,
       rate,
-      instructions,
+      payment_terms_id,
+      broker_id,
+      instructions = null,
       stops = [],
-      parties = [],
+      parties = [], // not in schema, ignore or implement separately
       tags = [],
     } = data;
 
-    // Basic validation (add more if you want)
-    if (!load_number || !commodity || !load_type || !equipment_type || !length_ft || !rate) {
+    // Validation
+    if (
+      !load_number ||
+      !commodity ||
+      !load_type ||
+      !equipment_type ||
+      !length_ft ||
+      !rate ||
+      !payment_terms_id ||
+      !broker_id
+    ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (!VALID_LOAD_STATUSES.includes(load_status)) {
+      return NextResponse.json({ error: `Invalid load_status. Must be one of ${VALID_LOAD_STATUSES.join(', ')}` }, { status: 400 });
+    }
+
+    if (!VALID_LOAD_TYPES.includes(load_type)) {
+      return NextResponse.json({ error: `Invalid load_type. Must be one of ${VALID_LOAD_TYPES.join(', ')}` }, { status: 400 });
+    }
+
+    if (!VALID_EQUIPMENT_TYPES.includes(equipment_type)) {
+      return NextResponse.json({ error: `Invalid equipment_type. Must be one of ${VALID_EQUIPMENT_TYPES.join(', ')}` }, { status: 400 });
     }
 
     await client.query('BEGIN');
 
     // Insert load
     const loadInsertText = `
-      INSERT INTO loads (load_number, commodity, load_type, equipment_type, length_ft, rate, instructions)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO loads
+        (load_number, invoice_number, load_status, commodity, load_type, equipment_type, length_ft, rate, payment_terms_id, broker_id, instructions)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id;
     `;
 
     const loadRes = await client.query(loadInsertText, [
       load_number,
+      invoice_number,
+      load_status,
       commodity,
       load_type,
       equipment_type,
       length_ft,
       rate,
-      instructions || null,
+      payment_terms_id,
+      broker_id,
+      instructions,
     ]);
 
     const loadId = loadRes.rows[0].id;
 
     // Insert stops
     for (const stop of stops) {
+      if (
+        !stop.type ||
+        !VALID_STOP_TYPES.includes(stop.type) ||
+        !stop.location ||
+        !stop.time_type ||
+        !VALID_TIME_TYPES.includes(stop.time_type)
+      ) {
+        await client.query('ROLLBACK');
+        return NextResponse.json({ error: 'Invalid stop data: type, location, and time_type are required and must be valid' }, { status: 400 });
+      }
+
       const stopInsertText = `
         INSERT INTO stops (load_id, type, location, time_type, appointment_time, window_start, window_end)
         VALUES ($1, $2, $3, $4, $5, $6, $7);
       `;
+
       await client.query(stopInsertText, [
         loadId,
         stop.type,
@@ -69,22 +118,10 @@ export async function POST(request) {
       ]);
     }
 
-    // Insert parties
-    for (const party of parties) {
-      const partyInsertText = `
-        INSERT INTO parties (load_id, type, name, driver_order)
-        VALUES ($1, $2, $3, $4);
-      `;
-      await client.query(partyInsertText, [
-        loadId,
-        party.type,
-        party.name,
-        party.driver_order || null,
-      ]);
-    }
-
     // Insert tags
     for (const tag of tags) {
+      if (typeof tag !== 'string' || tag.length === 0) continue;
+
       const tagInsertText = `
         INSERT INTO load_tags (load_id, tag)
         VALUES ($1, $2);

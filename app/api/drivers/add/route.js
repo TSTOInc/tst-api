@@ -13,15 +13,9 @@ export async function POST(request) {
   try {
     const data = await request.json();
 
-    const {
-      license_url,
-      name,
-      phone,
-      email,
-      license_number
-    } = data;
+    const { license_url, name, phone, email, license_number } = data;
 
-    // Basic validation
+    // Validation
     if (!name || !phone || !license_number) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
