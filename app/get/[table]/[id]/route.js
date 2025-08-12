@@ -25,11 +25,19 @@ const ALLOWED_TABLES = [
   'trucks'
 ];
 
+function createCorsResponse(data, status = 200) {
+  const res = createCorsResponse(data, { status })
+  res.headers.set('Access-Control-Allow-Origin', '*') // or restrict to your domain
+  res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+  return res
+}
+
 export async function GET(req, { params }) {
   const { table, id } = params;
 
   if (!ALLOWED_TABLES.includes(table)) {
-    return NextResponse.json({ error: 'Invalid table name' }, { status: 400 });
+    return createCorsResponse({ error: 'Invalid table name' }, { status: 400 });
   }
 
   try {
@@ -37,8 +45,8 @@ export async function GET(req, { params }) {
     `SELECT * FROM ${table} WHERE id = $1::uuid;`,
     [id]
   );
-    return NextResponse.json(result.rows);
+    return createCorsResponse(result.rows);
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createCorsResponse({ error: error.message }, { status: 500 });
   }
 }
