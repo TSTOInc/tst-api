@@ -37,9 +37,33 @@ export async function GET(req, { params }) {
           );
 
           broker.broker_agents = agentsResult.rows;
+
+          const brokerLoadsResult = await pool.query(
+            `SELECT * FROM loads WHERE broker_id = $1::uuid;`,
+            [id]
+          );
+
+          broker.loads = brokerLoadsResult.rows;
         }
 
         data = broker;
+        break;
+      }
+
+      case 'brokers_agents': {
+        const result = await pool.query(
+          `SELECT * FROM brokers_agents WHERE id = $1::uuid;`,
+          [id]
+        );
+        const brokerAgent = result.rows[0] || null;
+        if (brokerAgent) {
+          const brokerResult = await pool.query(
+            `SELECT "name" FROM brokers WHERE id = $1::uuid;`,
+            [brokerAgent.broker_id]
+        );
+          brokerAgent.broker = brokerResult.rows;
+        }
+        data = brokerAgent;
         break;
       }
 
