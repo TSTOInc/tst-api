@@ -44,6 +44,13 @@ export async function GET(req, { params }) {
           );
 
           broker.loads = brokerLoadsResult.rows;
+
+          const brokerPaymentTermsResult = await pool.query(
+            `SELECT * FROM payment_terms WHERE broker_id = $1::uuid;`,
+            [id]
+          );
+
+          broker.payment_terms = brokerPaymentTermsResult.rows;
         }
 
         data = broker;
