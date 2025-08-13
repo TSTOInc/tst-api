@@ -43,29 +43,43 @@ export async function GET(req, { params }) {
     let data
 
     switch (table) {
-case 'brokers_agents': {
-  if (id) {
-    // Return as an array of 1
-    const result = await pool.query(
-      `SELECT * FROM brokers_agents WHERE id = $1::uuid;`,
-      [id]
-    )
-    const brokerAgent = result.rows[0] || null
-    if (brokerAgent) {
-      const brokerResult = await pool.query(
-        `SELECT name FROM brokers WHERE id = $1::uuid;`,
-        [brokerAgent.broker_id]
-      )
-      brokerAgent.broker = brokerResult.rows[0] || null
-    }
-    data = brokerAgent ? [brokerAgent] : []
-  } else {
-    // Return full list
-    const result = await pool.query(`SELECT * FROM brokers_agents;`)
-    data = result.rows
-  }
-  break
-}
+      case 'brokers_agents': {
+        if (id) {
+          // Single agent
+          const result = await pool.query(
+            `SELECT * FROM brokers_agents WHERE id = $1::uuid;`,
+            [id]
+          )
+          const brokerAgent = result.rows[0] || null
+
+          if (brokerAgent) {
+            const brokerResult = await pool.query(
+              `SELECT name FROM brokers WHERE id = $1::uuid;`,
+              [brokerAgent.broker_id]
+            )
+            brokerAgent.broker = brokerResult.rows[0] || null
+          }
+
+          data = brokerAgent ? [brokerAgent] : []
+        } else {
+          // All agents
+          const agentsResult = await pool.query(`SELECT * FROM brokers_agents;`)
+          const agents = agentsResult.rows
+
+          // Attach broker name to each agent
+          for (const agent of agents) {
+            const brokerResult = await pool.query(
+              `SELECT name FROM brokers WHERE id = $1::uuid;`,
+              [agent.broker_id]
+            )
+            agent.broker = brokerResult.rows[0] || null
+          }
+
+          data = agents
+        }
+        break
+      }
+
 
 
       default: {
