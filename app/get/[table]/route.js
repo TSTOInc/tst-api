@@ -43,25 +43,30 @@ export async function GET(req, { params }) {
     let data
 
     switch (table) {
-      case 'brokers_agents': {
-        // Get the agent
-        const result = await pool.query(
-          `SELECT * FROM brokers_agents`
-        )
-        const brokerAgent = result.rows[0] || null
+case 'brokers_agents': {
+  if (id) {
+    // Return as an array of 1
+    const result = await pool.query(
+      `SELECT * FROM brokers_agents WHERE id = $1::uuid;`,
+      [id]
+    )
+    const brokerAgent = result.rows[0] || null
+    if (brokerAgent) {
+      const brokerResult = await pool.query(
+        `SELECT name FROM brokers WHERE id = $1::uuid;`,
+        [brokerAgent.broker_id]
+      )
+      brokerAgent.broker = brokerResult.rows[0] || null
+    }
+    data = brokerAgent ? [brokerAgent] : []
+  } else {
+    // Return full list
+    const result = await pool.query(`SELECT * FROM brokers_agents;`)
+    data = result.rows
+  }
+  break
+}
 
-        // If found, attach broker name
-        if (brokerAgent) {
-          const brokerResult = await pool.query(
-            `SELECT name FROM brokers WHERE id = $1::uuid;`,
-            [brokerAgent.broker_id]
-          )
-          brokerAgent.broker = brokerResult.rows[0] || null
-        }
-
-        data = brokerAgent
-        break
-      }
 
       default: {
         const queryText = id
