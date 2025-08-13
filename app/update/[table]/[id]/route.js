@@ -15,18 +15,22 @@ function createCorsResponse(data, status = 200) {
   return res;
 }
 
+const allowedTables = ['brokers', 'brokers_agents', 'loads'];
+
 export async function PATCH(req, { params }) {
   const { table, id } = params;
 
+  if (!allowedTables.includes(table)) {
+    return createCorsResponse({ error: 'Invalid table' }, 400);
+  }
+
   try {
-    // Parse JSON body
     const body = await req.json();
 
     if (!body || Object.keys(body).length === 0) {
       return createCorsResponse({ error: 'No data provided for update' }, 400);
     }
 
-    // Construct dynamic SET clause for SQL with all fields from body
     const setClauses = [];
     const values = [];
     let idx = 1;
@@ -35,12 +39,9 @@ export async function PATCH(req, { params }) {
       values.push(value);
       idx++;
     }
-    // Add id as last param
     values.push(id);
 
-    // WARNING: Be sure 'table' comes from a trusted source or sanitize it, because this is raw interpolation
     const query = `UPDATE ${table} SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *;`;
-
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
@@ -48,12 +49,15 @@ export async function PATCH(req, { params }) {
     }
 
     return createCorsResponse(result.rows[0]);
-
   } catch (error) {
     return createCorsResponse({ error: error.message }, 500);
   }
 }
 
 export async function OPTIONS() {
-  return createCorsResponse({}, 204);
+  const res = new Response(null, { status: 204 });
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Methods', 'GET, PATCH, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return res;
 }
