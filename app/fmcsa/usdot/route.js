@@ -29,7 +29,7 @@ export async function GET(request) {
       url = `https://mobile.fmcsa.dot.gov/qc/services/carriers/docket-number/${encodeURIComponent(query)}?webKey=${encodeURIComponent(webKey)}`;
       break;
     case 'usdot':
-      url = `https://mobile.fmcsa.dot.gov/qc/services/carriers/${encodeURIComponent(query)}?webKey=${encodeURIComponent(webKey)}`;
+      url = `https://mobile.fmcsa.dot.gov/qc/services/carriers/${encodeURIComponent(query)}/authority?webKey=${encodeURIComponent(webKey)}`;
       break;
     case 'name':
       url = `https://mobile.fmcsa.dot.gov/qc/services/carriers/name/${encodeURIComponent(query)}?webKey=${encodeURIComponent(webKey)}`;
