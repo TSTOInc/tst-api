@@ -21,7 +21,7 @@ export async function POST(request) {
     }
 
     const insertText = `
-      INSERT INTO drivers (image_url, equipment_number, equipment_type, status)
+      INSERT INTO equipment (image_url, equipment_number, equipment_type, status)
       VALUES ($1, $2, $3, $4)
       RETURNING id;
     `;
