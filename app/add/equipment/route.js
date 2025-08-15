@@ -6,24 +6,31 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
+
+// Helper to add CORS headers
 function createCorsResponse(data, status = 200) {
-  const res = NextResponse.json(data, { status })
-  res.headers.set('Access-Control-Allow-Origin', '*')
-  res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type')
-  return res
+  const res = NextResponse.json(data, { status });
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return res;
 }
+
+// Handle OPTIONS preflight request for CORS
+export async function OPTIONS() {
+  return createCorsResponse({}, 200);
+}
+
 export async function POST(request) {
   const client = await pool.connect();
 
   try {
     const data = await request.json();
-
     const { image_url, equipment_number, equipment_type, status } = data;
 
     // Validation
     if (!equipment_number || !equipment_type || !status) {
-      return createCorsResponse({ error: 'Missing required fields' }, { status: 400 });
+      return createCorsResponse({ error: 'Missing required fields' }, 400);
     }
 
     const insertText = `
@@ -40,10 +47,9 @@ export async function POST(request) {
     ]);
 
     const equipmentId = res.rows[0].id;
-
-    return createCorsResponse({ success: true, equipment_id: equipmentId }, { status: 201 });
+    return createCorsResponse({ success: true, equipment_id: equipmentId }, 201);
   } catch (error) {
-    return createCorsResponse({ error: error.message }, { status: 500 });
+    return createCorsResponse({ error: error.message }, 500);
   } finally {
     client.release();
   }
