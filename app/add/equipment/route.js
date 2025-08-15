@@ -6,7 +6,13 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
-
+function createCorsResponse(data, status = 200) {
+  const res = NextResponse.json(data, { status })
+  res.headers.set('Access-Control-Allow-Origin', '*')
+  res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+  return res
+}
 export async function POST(request) {
   const client = await pool.connect();
 
@@ -17,7 +23,7 @@ export async function POST(request) {
 
     // Validation
     if (!equipment_number || !equipment_type || !status) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return createCorsResponse({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const insertText = `
@@ -35,9 +41,9 @@ export async function POST(request) {
 
     const equipmentId = res.rows[0].id;
 
-    return NextResponse.json({ success: true, equipment_id: equipmentId }, { status: 201 });
+    return createCorsResponse({ success: true, equipment_id: equipmentId }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createCorsResponse({ error: error.message }, { status: 500 });
   } finally {
     client.release();
   }
