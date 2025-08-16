@@ -39,6 +39,7 @@ export async function POST(request) {
       email || null,
       license_number || null,
       image_url || null,
+      status,
     ]);
 
     const driverId = res.rows[0].id;
