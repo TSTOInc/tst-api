@@ -20,17 +20,10 @@ export async function POST(request) {
 
   try {
     const data = await request.json();
-    const { image_url, truck_number, truck_alias, vin, make, model, year, transponder_id,  driver_id, truck_status, color } = data;
-
-    if (!truck_number || !truck_status) {
-        const missingFields = [];
-        if (!truck_number) missingFields.push('truck_number');
-        if (!truck_status) missingFields.push('status');
-      return createCorsResponse({ error: 'Missing required fields: ' + missingFields.join(', ') + '.' }, 400);
-    }
+    const { image_url, truck_number, truck_alias, vin, make, model, year, transponder_id,  driver_id, status, color } = data;
 
     const insertText = `
-      INSERT INTO drivers (image_url, truck_number, truck_alias, vin, make, model, year, transponder_id, driver_id, truck_status, color)
+      INSERT INTO drivers (image_url, truck_number, truck_alias, vin, make, model, year, transponder_id, driver_id, status, color)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id;
     `;
@@ -45,7 +38,7 @@ export async function POST(request) {
       year || null,
       transponder_id || null,
       driver_id || null,
-      truck_status,
+      status,
       color || null,
     ]);
 
