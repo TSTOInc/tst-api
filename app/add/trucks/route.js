@@ -30,7 +30,7 @@ export async function POST(request) {
     }
 
     const insertText = `
-      INSERT INTO drivers (image_url, truck_number, truck_alias, vin, make, model, year, transponder_id, driver_id, status, color)
+      INSERT INTO trucks (image_url, truck_number, truck_alias, vin, make, model, year, transponder_id, driver_id, status, color)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id;
     `;
