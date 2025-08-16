@@ -43,7 +43,7 @@ export async function POST(request) {
       make || null,
       model || null,
       year || null,
-      trasponder_id || null,
+      transponder_id || null,
       driver_id || null,
       status,
       color || null,
