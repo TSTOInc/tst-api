@@ -9,31 +9,23 @@ const pool = new Pool({
 
 function createCorsResponse(data, status = 200) {
   const res = NextResponse.json(data, { status });
-
-  // Allow all origins (or restrict to your domain)
   res.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-  // Allow GET and OPTIONS requests
-  res.headers.set('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
-  // Allow Content-Type header
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
-
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.headers.set('Access-Control-Max-Age', '86400');
   return res;
 }
 
-
 export async function DELETE(req, { params }) {
     const { table, id } = params;
-    
     try {
         const result = await pool.query(
             `DELETE FROM ${table} WHERE id = $1::uuid RETURNING *;`,
             [id]
         );
-
         if (result.rowCount === 0) {
             return createCorsResponse({ message: 'No row found' }, 404);
         }
-
         return createCorsResponse({
             message: 'Record deleted',
             deleted: result.rows[0],
@@ -46,5 +38,10 @@ export async function DELETE(req, { params }) {
 
 // OPTIONS handler for preflight
 export async function OPTIONS() {
-    return createCorsResponse(null, 204);
+    const res = new NextResponse(null, { status: 204 });
+    res.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.headers.set('Access-Control-Max-Age', '86400'); // 1 day
+    return res;
 }
