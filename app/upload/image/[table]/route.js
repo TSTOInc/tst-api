@@ -9,14 +9,15 @@ function createCorsResponse(data, status = 200) {
   return res;
 }
 
-export async function POST(req) {
+export async function POST(req, { params }) {
+    const { table } = params
   try {
     const formData = await req.formData();
     const file = formData.get("file");
 
     if (!file) return createCorsResponse({ error: "No file uploaded" }, 400);
 
-    const uploaded = await put(`equipment/${Date.now()}-${file.name}`, file, {
+    const uploaded = await put(`${table}/${Date.now()}-${file.name}`, file, {
       access: "public",
     });
 
