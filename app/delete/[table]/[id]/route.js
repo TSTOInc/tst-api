@@ -15,7 +15,7 @@ function createCorsResponse(data, status = 200) {
     // Allow all origins (or restrict to your domain)
     res.headers.set('Access-Control-Allow-Origin', '*');
     // Allow GET and OPTIONS requests
-    res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.headers.set('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS');
     // Allow Content-Type header
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
 
