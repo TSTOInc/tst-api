@@ -23,7 +23,7 @@ function createCorsResponse(data, status = 200) {
 }
 
 // Handle GET requests
-export async function GET(req, { params }) {
+export async function DELETE(req, { params }) {
     const { table, id } = params; // Get table name and ID from the route
 
     try {
