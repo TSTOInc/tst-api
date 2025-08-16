@@ -20,15 +20,15 @@ export async function POST(request) {
 
   try {
     const data = await request.json();
-    const { license_url, name, phone, email, license_number, image_url } = data;
+    const { license_url, name, phone, email, license_number, image_url, status } = data;
 
-    if (!name || !phone) {
+    if (!name || !phone || !status) {
       return createCorsResponse({ error: 'Missing required fields' }, 400);
     }
 
     const insertText = `
       INSERT INTO drivers (license_url, name, phone, email, license_number, image_url, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id;
     `;
 
