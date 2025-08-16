@@ -23,7 +23,10 @@ export async function POST(request) {
     const { image_url, truck_number, truck_alias, vin, make, model, year, trasponder_id,  driver_id, status, color } = data;
 
     if (!truck_number || !status) {
-      return createCorsResponse({ error: 'Missing required fields' }, 400);
+        const missingFields = [];
+        if (!truck_number) missingFields.push('truck_number');
+        if (!status) missingFields.push('status');
+      return createCorsResponse({ error: 'Missing required fields: ' + missingFields.join(', ') + '.' }, 400);
     }
 
     const insertText = `
