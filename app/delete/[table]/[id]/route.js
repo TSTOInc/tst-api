@@ -46,5 +46,5 @@ export async function DELETE(req, { params }) {
 
 // OPTIONS handler for preflight
 export async function OPTIONS() {
-    return createCorsResponse({}, 204);
+    return createCorsResponse(null, 204);
 }
