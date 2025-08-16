@@ -11,7 +11,7 @@ function createCorsResponse(data, status = 200) {
   const res = NextResponse.json(data, { status });
 
   // Allow all origins (or restrict to your domain)
-  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
   // Allow GET and OPTIONS requests
   res.headers.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   // Allow Content-Type header
