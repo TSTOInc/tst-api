@@ -27,7 +27,7 @@ export async function POST(request) {
     }
 
     const insertText = `
-      INSERT INTO drivers (license_url, name, phone, email, license_number, image_url)
+      INSERT INTO drivers (license_url, name, phone, email, license_number, image_url, status)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id;
     `;
