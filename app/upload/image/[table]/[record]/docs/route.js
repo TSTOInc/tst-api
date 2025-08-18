@@ -17,7 +17,7 @@ export async function POST(req, { params }) {
 
     if (!file) return createCorsResponse({ error: "No file uploaded" }, 400);
 
-    const uploaded = await put(`${table}/${record}/docs/${Date.now()}-${file.name}`, file, {
+    const uploaded = await put(`${table}/${record}/docs/${file.name}`, file, {
       access: "public",
     });
 
