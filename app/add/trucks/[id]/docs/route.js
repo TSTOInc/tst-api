@@ -8,11 +8,12 @@ const pool = new Pool({
 })
 
 function createCorsResponse(data, status = 200) {
-  const res = NextResponse.json(data, { status })
-  res.headers.set('Access-Control-Allow-Origin', '*')
-  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type')
-  return res
+    const res = NextResponse.json(data, { status });
+    res.headers.set('Access-Control-Allow-Origin', '*');
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.headers.set('Access-Control-Max-Age', '86400');
+    return res;
 }
 
 export async function POST(
@@ -63,5 +64,10 @@ export async function POST(
 }
 
 export async function OPTIONS() {
-  return createCorsResponse({}, 200)
+  const res = new NextResponse(null, { status: 204 });
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.headers.set('Access-Control-Max-Age', '86400'); // 1 day
+  return res;
 }
