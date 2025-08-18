@@ -21,12 +21,18 @@ function createCorsResponse(data, status = 200) {
 export async function DELETE(req, { params }) {
     const { table, id } = params;
     try {
+        const hasDocs = table === "trucks"; // only trucks have docs
+
+        const selectColumns = hasDocs ? "image_url, docs" : "image_url";
+
         // fetch record to get image url
         const { rows } = await pool.query(
-            `SELECT image_url, docs FROM ${table} WHERE id = $1::uuid;`,
+            `SELECT ${selectColumns} FROM ${table} WHERE id = $1::uuid;`,
             [id]
         );
-        
+        if (rows.length === 0) {
+            return createCorsResponse({ message: 'No row found' }, 404);
+        }
         const { image_url, docs } = rows[0];
 
         // delete image_url blob
