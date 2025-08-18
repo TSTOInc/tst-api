@@ -29,7 +29,7 @@ export async function POST(request, { params }) {
 
     const res = await client.query(`
       UPDATE trucks
-      SET docs = ARRAY_APPEND(docs, 'new_value')
+      SET docs = ARRAY_APPEND(docs, '${document_url}')
       WHERE id = $1::uuid
       RETURNING id, docs;
       `, 
