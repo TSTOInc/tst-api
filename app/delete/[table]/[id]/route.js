@@ -23,7 +23,7 @@ export async function DELETE(req, { params }) {
     try {
         // fetch record to get image url
         const { rows } = await pool.query(
-            `SELECT image_url, docs FROM ${table} WHERE id = $1::uuid;`,
+            `SELECT image_url FROM ${table} WHERE id = $1::uuid;`,
             [id]
         );
 
@@ -38,17 +38,7 @@ export async function DELETE(req, { params }) {
             }
         }
 
-        if (docs && Array.isArray(docs)) {
-            await Promise.all(
-                docs.map(async (docUrl) => {
-                    try {
-                        await del(docUrl);
-                    } catch (err) {
-                        console.warn("Doc blob not found or already deleted:", docUrl);
-                    }
-                })
-            );
-        }
+        
 
         const result = await pool.query(
             `DELETE FROM ${table} WHERE id = $1::uuid RETURNING *;`,
