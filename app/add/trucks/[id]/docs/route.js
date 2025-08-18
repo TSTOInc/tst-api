@@ -28,10 +28,12 @@ export async function POST(request, { params }) {
     }
 
     const result = await client.query(
-      `UPDATE trucks 
-       SET docs = COALESCE(docs, '{}') || $2::text 
-       WHERE id = $1::uuid
-       RETURNING id;`,
+      `
+      UPDATE trucks
+      SET docs = ARRAY_APPEND(COALESCE(docs, '{}'), $2::text)
+      WHERE id = $1::uuid
+      RETURNING id, docs;
+      `,
       [id, document_url]
     );
 
