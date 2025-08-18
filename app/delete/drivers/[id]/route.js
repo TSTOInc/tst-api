@@ -48,7 +48,7 @@ export async function DELETE(req, { params }) {
             }
         }
         const result = await pool.query(
-            `DELETE FROM trucks WHERE id = $1::uuid RETURNING *;`,
+            `DELETE FROM drivers WHERE id = $1::uuid RETURNING *;`,
             [id]
         );
 
