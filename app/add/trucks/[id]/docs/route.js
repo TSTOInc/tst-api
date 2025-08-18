@@ -35,7 +35,7 @@ export async function POST(request, { params }) {
       `, 
       [id]);
 
-    return createCorsResponse({ success: true, truck_id: res.rows }, 201);
+    return createCorsResponse({ success: true, truck_id: res.rows[0] }, 201);
   } catch (error) {
     return createCorsResponse({ error: error.message }, 500);
   } finally {
