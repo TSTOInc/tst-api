@@ -39,7 +39,7 @@ export async function DELETE(req, { params }) {
         }
 
         // delete docs
-        await del(`https://bxporjcib7gy7ljf.public.blob.vercel-storage.com/${table}/${id}`);
+        await del(`https://bxporjcib7gy7ljf.public.blob.vercel-storage.com/${table}/${id}/docs`);
 
         const result = await pool.query(
             `DELETE FROM ${table} WHERE id = $1::uuid RETURNING *;`,
