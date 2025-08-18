@@ -19,22 +19,25 @@ function createCorsResponse(data, status = 200) {
 }
 
 export async function DELETE(req, { params }) {
-    const { table, id } = params;
+    const { id } = params;
     try {
+
         // fetch record to get image url
         const { rows } = await pool.query(
-            `SELECT image_url, docs FROM ${table} WHERE id = $1::uuid;`,
+            `SELECT image_url, docs FROM trucks WHERE id = $1::uuid;`,
             [id]
         );
+        if (rows.length === 0) {
+            return createCorsResponse({ message: 'No row found' }, 404);
+        }
+        const { image_url, docs } = rows[0];
 
-        if (rows.length !== 0) {
-            const image_url = rows[0].image_url;
-            if (image_url) {
-                try {
-                    await del(image_url);
-                } catch (err) {
-                    console.warn("Blob not found or already deleted:", image_url);
-                }
+        // delete image_url blob
+        if (image_url) {
+            try {
+                await del(image_url);
+            } catch (err) {
+                console.warn("Image blob not found or already deleted:", image_url);
             }
         }
 
@@ -51,7 +54,7 @@ export async function DELETE(req, { params }) {
         }
 
         const result = await pool.query(
-            `DELETE FROM ${table} WHERE id = $1::uuid RETURNING *;`,
+            `DELETE FROM trucks WHERE id = $1::uuid RETURNING *;`,
             [id]
         );
 
