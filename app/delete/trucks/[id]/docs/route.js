@@ -18,7 +18,7 @@ function createCorsResponse(data, status = 200) {
 }
 
 export async function DELETE(req, { params }) {
-  const { table, id } = params;
+  const { id } = params;
 
   try {
     const body = await req.json();
@@ -38,7 +38,7 @@ export async function DELETE(req, { params }) {
 
     // Remove the document_url from the docs TEXT[] column
     const query = `
-      UPDATE ${table}
+      UPDATE trucks
       SET docs = array_remove(docs, $1)
       WHERE id = $2
       RETURNING docs
