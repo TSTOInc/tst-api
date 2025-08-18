@@ -26,7 +26,7 @@ export async function DELETE(req, { params }) {
             `SELECT image_url, docs FROM ${table} WHERE id = $1::uuid;`,
             [id]
         );
-
+        
         const { image_url, docs } = rows[0];
 
         // delete image_url blob
