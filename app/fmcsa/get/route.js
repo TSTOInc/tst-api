@@ -47,18 +47,17 @@ export async function GET(request) {
     const data = await res.json();
 
     // If we have a USDOT response, fetch docket numbers if available
-    if ((type.toLowerCase() === 'usdot' || type.toLowerCase() === 'name') && data.content && data.content.carrier) {
+    if (type.toLowerCase() === 'usdot' && data.content && data.content.carrier) {
       const carrier = data.content.carrier;
 
-      // Check if a docket numbers link exists
       const docketUrl = data.content._links?.['docket numbers']?.href;
       if (docketUrl) {
         try {
-          const docketRes = await fetch(docketUrl);
+          const docketRes = await fetch(`${docketUrl}?webKey=${encodeURIComponent(webKey)}`);
           if (docketRes.ok) {
             const docketData = await docketRes.json();
-            // Append docket numbers to the carrier object
-            carrier.docketNumbers = docketData?.content || [];
+            // Append docket numbers to carrier
+            carrier.docketNumbers = docketData.content?.map(d => d.docketNumber) || [];
           } else {
             carrier.docketNumbers = [];
           }
@@ -71,6 +70,7 @@ export async function GET(request) {
 
       return createCorsResponse({ content: { ...data.content, carrier } });
     }
+
 
     // For 'name' type filtering
     if (type.toLowerCase() === 'name' && Array.isArray(data.content)) {
