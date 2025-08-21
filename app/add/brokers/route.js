@@ -7,6 +7,13 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
+function createCorsResponse(data, status = 200) {
+  const res = NextResponse.json(data, { status });
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return res;
+}
 export async function POST(request) {
   const client = await pool.connect();
 
@@ -16,8 +23,8 @@ export async function POST(request) {
     const { image_url, name, usdot_number, docket_number, address, phone, email, website, status, notes} = data;
 
     // Validation
-    if (!name || !address) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!name || !usdot_number || !docket_number || !address) {
+      return createCorsResponse({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const insertText = `
@@ -41,10 +48,13 @@ export async function POST(request) {
 
     const driverId = res.rows[0].id;
 
-    return NextResponse.json({ success: true, driver_id: driverId }, { status: 201 });
+    return createCorsResponse({ success: true, driver_id: driverId }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createCorsResponse({ error: error.message }, { status: 500 });
   } finally {
     client.release();
   }
+}
+export async function OPTIONS() {
+  return createCorsResponse({}, 200);
 }
