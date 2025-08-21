@@ -56,8 +56,9 @@ export async function GET(request) {
           const docketRes = await fetch(`${docketUrl}?webKey=${encodeURIComponent(webKey)}`);
           if (docketRes.ok) {
             const docketData = await docketRes.json();
-            // Append docket numbers to carrier
-            carrier.docketNumbers = docketData.content?.map(d => d.docketNumber) || [];
+            // Combine prefix and docketNumber like MC-807667
+            carrier.docketNumbers =
+              docketData.content?.map(d => `${d.prefix}-${d.docketNumber}`) || [];
           } else {
             carrier.docketNumbers = [];
           }
@@ -70,6 +71,7 @@ export async function GET(request) {
 
       return createCorsResponse({ content: { ...data.content, carrier } });
     }
+
 
 
     // For 'name' type filtering
