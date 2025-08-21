@@ -57,16 +57,16 @@ export async function GET(request) {
           if (docketRes.ok) {
             const docketData = await docketRes.json();
             // Combine prefix and docketNumber like MC-807667
-            carrier.docketNumbers =
+            carrier.docketNumber =
               docketData.content?.map(d => `${d.prefix}-${d.docketNumber}`) || [];
           } else {
-            carrier.docketNumbers = [];
+            carrier.docketNumber = [];
           }
         } catch {
-          carrier.docketNumbers = [];
+          carrier.docketNumber = [];
         }
       } else {
-        carrier.docketNumbers = [];
+        carrier.docketNumber = [];
       }
 
       return createCorsResponse({ content: { ...data.content, carrier } });
