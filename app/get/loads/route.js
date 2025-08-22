@@ -27,7 +27,7 @@ export async function GET() {
         s.time_type AS stop_time_type,
         s.appointment_time AS stop_appointment_time,
         s.window_start AS stop_window_start,
-        s.window_end AS stop_window_end,
+        s.window_end AS stop_window_end
       FROM loads l
       LEFT JOIN stops s ON s.load_id = l.id
       ORDER BY l.id, s.appointment_time, s.window_start
