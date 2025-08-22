@@ -56,16 +56,16 @@ export async function POST(request) {
     }
 
     await client.query('BEGIN');
-    
+
 
     // Insert load
     const loadInsertText = `
-      INSERT INTO loads
-        (load_number, invoice_number, load_status, commodity, load_type, length_ft, rate, payment_terms_id, broker_id, instructions)
-      VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING id;
-    `;
+  INSERT INTO loads
+    (load_number, invoice_number, load_status, commodity, load_type, length_ft, rate, payment_terms_id, broker_id, instructions)
+  VALUES
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+  RETURNING id;
+`;
 
     const loadRes = await client.query(loadInsertText, [
       load_number,
@@ -79,6 +79,7 @@ export async function POST(request) {
       broker_id,
       instructions,
     ]);
+
 
     const loadId = loadRes.rows[0].id;
 
