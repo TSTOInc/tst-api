@@ -15,6 +15,7 @@ function normalizeCarrier(c) {
     legalName: c.legalName || null,
     dbaName: c.dbaName || null,
     dotNumber: c.dotNumber || null,
+    docketNumber: c.docketNumber || null,
     allowedToOperate: c.allowedToOperate || null,
     statusCode: c.statusCode || null,
     phyCity: c.phyCity || null,
