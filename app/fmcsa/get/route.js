@@ -63,10 +63,29 @@ export async function GET(request) {
 
     const data = await res.json();
 
-    // usdot/docket return a single carrier object
-    if ((type.toLowerCase() === 'usdot' || type.toLowerCase() === 'docket') && data.content?.carrier) {
+    if (type.toLowerCase() === 'usdot' && data.content && data.content.carrier) {
       const carrier = normalizeCarrier(data.content.carrier);
-      return createCorsResponse({ carriers: carrier ? [carrier] : [] });
+
+      const docketUrl = data.content._links?.['docket numbers']?.href;
+      if (docketUrl) {
+        try {
+          const docketRes = await fetch(`${docketUrl}?webKey=${encodeURIComponent(webKey)}`);
+          if (docketRes.ok) {
+            const docketData = await docketRes.json();
+            // Combine prefix and docketNumber like MC-807667
+            carrier.docketNumber =
+              docketData.content?.map(d => `${d.prefix}-${d.docketNumber}`) || [];
+          } else {
+            carrier.docketNumber = [];
+          }
+        } catch {
+          carrier.docketNumber = [];
+        }
+      } else {
+        carrier.docketNumber = [];
+      }
+
+      return createCorsResponse({ content: { ...data.content, carrier } });
     }
 
     // name search returns an array
