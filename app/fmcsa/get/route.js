@@ -2,15 +2,31 @@ import { NextResponse } from 'next/server';
 
 function createCorsResponse(data, status = 200) {
   const res = NextResponse.json(data, { status });
-  res.headers.set('Access-Control-Allow-Origin', '*'); // Adjust to your domain in production
+  res.headers.set('Access-Control-Allow-Origin', '*'); // TODO: restrict in prod
   res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
   return res;
 }
 
+// normalize to only return important fields
+function normalizeCarrier(c) {
+  if (!c) return null;
+  return {
+    legalName: c.legalName || null,
+    dbaName: c.dbaName || null,
+    dotNumber: c.dotNumber || null,
+    allowedToOperate: c.allowedToOperate || null,
+    statusCode: c.statusCode || null,
+    phyCity: c.phyCity || null,
+    phyCountry: c.phyCountry || null,
+    phyState: c.phyState || null,
+    phyStreet: c.phyStreet || null,
+    phyZipcode: c.phyZipcode || null,
+  };
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-
   const type = searchParams.get('type');
   const query = searchParams.get('q');
   const webKey = process.env.FMCAS_WEBKEY;
@@ -46,42 +62,21 @@ export async function GET(request) {
 
     const data = await res.json();
 
-    // If we have a USDOT response, fetch docket numbers if available
-    if (type.toLowerCase() === 'usdot' && data.content && data.content.carrier) {
-      const carrier = data.content.carrier;
-
-      const docketUrl = data.content._links?.['docket numbers']?.href;
-      if (docketUrl) {
-        try {
-          const docketRes = await fetch(`${docketUrl}?webKey=${encodeURIComponent(webKey)}`);
-          if (docketRes.ok) {
-            const docketData = await docketRes.json();
-            // Combine prefix and docketNumber like MC-807667
-            carrier.docketNumber =
-              docketData.content?.map(d => `${d.prefix}-${d.docketNumber}`) || [];
-          } else {
-            carrier.docketNumber = [];
-          }
-        } catch {
-          carrier.docketNumber = [];
-        }
-      } else {
-        carrier.docketNumber = [];
-      }
-
-      return createCorsResponse({ content: { ...data.content, carrier } });
+    // usdot/docket return a single carrier object
+    if ((type.toLowerCase() === 'usdot' || type.toLowerCase() === 'docket') && data.content?.carrier) {
+      const carrier = normalizeCarrier(data.content.carrier);
+      return createCorsResponse({ carriers: carrier ? [carrier] : [] });
     }
 
-
-
-    // For 'name' type filtering
+    // name search returns an array
     if (type.toLowerCase() === 'name' && Array.isArray(data.content)) {
-      const filtered = data.content.filter(item => item.carrier.allowedToOperate === 'Y');
-      const carriers = filtered.map(item => item.carrier);
-      return createCorsResponse({ carriers });
+      const filtered = data.content
+        .map(item => normalizeCarrier(item.carrier))
+        .filter(c => c && c.allowedToOperate === 'Y');
+      return createCorsResponse({ carriers: filtered });
     }
 
-    return createCorsResponse(data);
+    return createCorsResponse({ carriers: [] });
   } catch (error) {
     return createCorsResponse({ error: error.message }, 500);
   }
