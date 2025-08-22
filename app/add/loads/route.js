@@ -65,7 +65,7 @@ export async function POST(request) {
   INSERT INTO loads
     (load_number, invoice_number, load_status, commodity, load_type, length_ft, rate, payment_terms_id, truck_id, equipment_id, broker_id, instructions)
   VALUES
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
   RETURNING id;
 `;
 
