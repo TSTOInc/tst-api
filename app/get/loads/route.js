@@ -19,19 +19,23 @@ export async function GET() {
     try {
         // Query loads and their stops
         const result = await pool.query(`
-      SELECT 
-        l.*,
-        s.id AS stop_id,
-        s.load_id AS stop_load_id,
-        s.location AS stop_location,
-        s.time_type AS stop_time_type,
-        s.appointment_time AS stop_appointment_time,
-        s.window_start AS stop_window_start,
-        s.window_end AS stop_window_end
-      FROM loads l
-      LEFT JOIN stops s ON s.load_id = l.id
-      ORDER BY l.id, s.appointment_time, s.window_start
-    `)
+  SELECT 
+    l.*,
+    b.name AS broker_name,
+    ba.name AS agent_name,
+    s.id AS stop_id,
+    s.load_id AS stop_load_id,
+    s.location AS stop_location,
+    s.time_type AS stop_time_type,
+    s.appointment_time AS stop_appointment_time,
+    s.window_start AS stop_window_start,
+    s.window_end AS stop_window_end
+  FROM loads l
+  LEFT JOIN brokers b ON b.id = l.broker_id
+  LEFT JOIN brokers_agents ba ON ba.broker_id = l.broker_id
+  LEFT JOIN stops s ON s.load_id = l.id
+  ORDER BY l.id, s.appointment_time, s.window_start
+`)
 
         // Group stops by load
         const loadsMap = new Map()
