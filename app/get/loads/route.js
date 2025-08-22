@@ -32,7 +32,7 @@ export async function GET() {
     s.window_end AS stop_window_end
   FROM loads l
   LEFT JOIN brokers b ON b.id = l.broker_id
-  LEFT JOIN brokers_agents ba ON ba.broker_id = l.broker_id
+  LEFT JOIN brokers_agents ba ON ba.id = l.agent_id
   LEFT JOIN stops s ON s.load_id = l.id
   ORDER BY l.id, s.appointment_time, s.window_start
 `)
