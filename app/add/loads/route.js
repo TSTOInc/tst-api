@@ -73,7 +73,6 @@ export async function POST(request) {
       load_status,
       commodity,
       load_type,
-      equipment_type,
       length_ft,
       rate,
       payment_terms_id,
