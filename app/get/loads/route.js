@@ -3,64 +3,82 @@ import pkg from 'pg'
 const { Pool } = pkg
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
 })
 
 function createCorsResponse(data, status = 200) {
-  const res = NextResponse.json(data, { status })
-  res.headers.set('Access-Control-Allow-Origin', '*')
-  res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type')
-  return res
+    const res = NextResponse.json(data, { status })
+    res.headers.set('Access-Control-Allow-Origin', '*')
+    res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    return res
 }
 
 export async function GET() {
-  try {
-    // Query loads and their stops
-    const result = await pool.query(`
+    try {
+        // Query loads and their stops
+        const result = await pool.query(`
       SELECT 
         l.*,
         s.id AS stop_id,
-        s.address AS stop_address,
-        s.sequence AS stop_sequence
+        s.load_id AS stop_load_id,
+        s.location AS stop_location,
+        s.time_type AS stop_time_type,
+        s.appointment_time AS stop_appointment_time,
+        s.window_start AS stop_window_start,
+        s.window_end AS stop_window_end,
       FROM loads l
       LEFT JOIN stops s ON s.load_id = l.id
-      ORDER BY l.id, s.sequence
+      ORDER BY l.id, s.appointment_time, s.window_start
     `)
 
-    // Group stops by load
-    const loadsMap = new Map()
+        // Group stops by load
+        const loadsMap = new Map()
 
-    result.rows.forEach(row => {
-      const loadId = row.id
-      if (!loadsMap.has(loadId)) {
-        loadsMap.set(loadId, { 
-          ...row, 
-          stops: [] 
+        result.rows.forEach(row => {
+            const loadId = row.id
+            if (!loadsMap.has(loadId)) {
+                loadsMap.set(loadId, {
+                    ...row,
+                    stops: []
+                })
+            }
+            if (row.stop_id) {
+                loadsMap.get(loadId).stops.push({
+                    id: row.stop_id,
+                    load_id: row.stop_load_id,
+                    type: row.stop_type,
+                    location: row.stop_location,
+                    time_type: row.stop_time_type,
+                    appointment_time: row.stop_appointment_time,
+                    window_start: row.stop_window_start,
+                    window_end: row.stop_window_end,
+                    created_at: row.stop_created_at,
+                    updated_at: row.stop_updated_at,
+                })
+            }
+
+            // Remove the temporary stop columns from load
+            delete loadsMap.get(loadId).stop_id
+            delete loadsMap.get(loadId).stop_load_id
+            delete loadsMap.get(loadId).stop_type
+            delete loadsMap.get(loadId).stop_location
+            delete loadsMap.get(loadId).stop_time_type
+            delete loadsMap.get(loadId).stop_appointment_time
+            delete loadsMap.get(loadId).stop_window_start
+            delete loadsMap.get(loadId).stop_window_end
+            delete loadsMap.get(loadId).stop_created_at
+            delete loadsMap.get(loadId).stop_updated_at
         })
-      }
-      if (row.stop_id) {
-        loadsMap.get(loadId).stops.push({
-          id: row.stop_id,
-          address: row.stop_address,
-          sequence: row.stop_sequence
-        })
-      }
 
-      // Remove stop columns from load object
-      delete loadsMap.get(loadId).stop_id
-      delete loadsMap.get(loadId).stop_address
-      delete loadsMap.get(loadId).stop_sequence
-    })
-
-    const data = Array.from(loadsMap.values())
-    return createCorsResponse(data)
-  } catch (error) {
-    return createCorsResponse({ error: error.message }, 500)
-  }
+        const data = Array.from(loadsMap.values())
+        return createCorsResponse(data)
+    } catch (error) {
+        return createCorsResponse({ error: error.message }, 500)
+    }
 }
 
 export async function OPTIONS() {
-  return createCorsResponse({}, 204)
+    return createCorsResponse({}, 204)
 }
