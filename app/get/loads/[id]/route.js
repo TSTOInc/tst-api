@@ -27,6 +27,7 @@ export async function GET(req, { params }) {
       SELECT 
         l.*,
         b.name AS broker_name,
+        b.address AS broker_address,
         ba.name AS agent_name,
         s.id AS stop_id,
         s.load_id AS stop_load_id,
