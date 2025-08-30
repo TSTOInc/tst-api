@@ -32,6 +32,7 @@ export async function GET(req, { params }) {
         ba.name AS agent_name,
         s.id AS stop_id,
         s.load_id AS stop_load_id,
+        s.type AS stop_type,
         s.location AS stop_location,
         s.time_type AS stop_time_type,
         s.appointment_time AS stop_appointment_time,
