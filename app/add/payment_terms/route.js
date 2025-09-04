@@ -22,7 +22,7 @@ export async function POST(request) {
     const data = await request.json();
     const { name, days_to_pay, fee_percent, is_quickpay, email, broker_id } = data;
 
-    if (!name || !days_to_pay || is_quick_pay === undefined || !broker_id) {
+    if (!name || !days_to_pay || is_quickpay === undefined || !broker_id) {
       return createCorsResponse({ error: 'Missing required fields' }, 400);
     }
 
