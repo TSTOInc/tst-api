@@ -20,14 +20,14 @@ export async function POST(request) {
 
   try {
     const data = await request.json();
-    const { name, days_to_pay, fee_percent, is_quick_pay, email, broker_id } = data;
+    const { name, days_to_pay, fee_percent, is_quickpay, email, broker_id } = data;
 
-    if (!name || !days_to_pay || !is_quick_pay || !broker_id) {
+    if (!name || !days_to_pay || !is_quickpay || !broker_id) {
       return createCorsResponse({ error: 'Missing required fields' }, 400);
     }
 
     const insertText = `
-      INSERT INTO payment_terms (name, days_to_pay, fee_percent, is_quick_pay, email, broker_id)
+      INSERT INTO payment_terms (name, days_to_pay, fee_percent, is_quickpay, email, broker_id)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id;
     `;
@@ -36,7 +36,7 @@ export async function POST(request) {
       name,
       days_to_pay,
       fee_percent || 0,
-      is_quick_pay,
+      is_quickpay,
       email || null,
       broker_id,
     ]);
