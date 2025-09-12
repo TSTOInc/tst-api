@@ -13,7 +13,7 @@ const VALID_EQUIPMENT_TYPES = ['reefer', 'van', 'flatbed'];
 const VALID_STOP_TYPES = ['pickup', 'delivery'];
 const VALID_TIME_TYPES = ['appointment', 'window'];
 
-function withCors(responseW) {
+function withCors(response) {
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
