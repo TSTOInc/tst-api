@@ -21,7 +21,6 @@ function withCors(response) {
 }
 
 export async function OPTIONS() {
-  // Preflight response
   return withCors(new NextResponse(null, { status: 204 }));
 }
 
@@ -31,7 +30,7 @@ export async function POST(request) {
   try {
     const data = await request.json();
 
-    const {
+    let {
       load_number,
       invoice_number = null,
       load_status = 'new',
@@ -76,6 +75,12 @@ export async function POST(request) {
     }
 
     await client.query('BEGIN');
+
+    // Auto-generate invoice_number if not provided
+    if (!invoice_number) {
+      const seqRes = await client.query(`SELECT nextval('invoice_number_seq') AS next_invoice`);
+      invoice_number = seqRes.rows[0].next_invoice.toString();
+    }
 
     // Insert load
     const loadInsertText = `
@@ -148,7 +153,7 @@ export async function POST(request) {
     await client.query('COMMIT');
 
     return withCors(
-      NextResponse.json({ success: true, load_id: loadId }, { status: 201 })
+      NextResponse.json({ success: true, load_id: loadId, invoice_number }, { status: 201 })
     );
   } catch (error) {
     await client.query('ROLLBACK');
