@@ -31,6 +31,7 @@ export async function GET(req, { params }) {
         b.address_2 AS broker_address_2,
         ba.name AS agent_name,
         pt.days_to_pay AS payment_days_to_pay,
+        pt.name AS payment_term_name,
         s.id AS stop_id,
         s.load_id AS stop_load_id,
         s.type AS stop_type,
