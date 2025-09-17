@@ -17,39 +17,39 @@ function createCorsResponse(data, status = 200) {
 
 // GET a single load by ID
 export async function GET(req, { params }) {
-  const { id } = params; // Get table name and ID from the route
+    const { id } = params; // Get table name and ID from the route
 
     if (!id) return createCorsResponse({ error: "Missing load ID" }, 400);
 
     try {
         const result = await pool.query(
             `
-      SELECT 
-        l.*,
-        b.name AS broker_name,
-        b.address AS broker_address_1,
-        b.address_2 AS broker_address_2,
-        ba.name AS agent_name,
-        pt.days_to_pay AS payment_days_to_pay,
-        pt.name AS payment_term_name,
-        s.id AS stop_id,
-        s.load_id AS stop_load_id,
-        s.type AS stop_type,
-        s.location AS stop_location,
-        s.time_type AS stop_time_type,
-        s.appointment_time AS stop_appointment_time,
-        s.window_start AS stop_window_start,
-        s.window_end AS stop_window_end
-      FROM loads l
-      LEFT JOIN brokers b ON b.id = l.broker_id
-      LEFT JOIN brokers_agents ba ON ba.id = l.agent_id
-      LEFT JOIN stops s ON s.load_id = l.id
-      LEFT JOIN payment_terms pt ON pt.id = l.payment_terms_id
-      WHERE l.id = $1
-      ORDER BY s.appointment_time, s.window_start
-    `,
+            SELECT 
+                l.*,
+                b.name AS broker_name,
+                b.address AS broker_address_1,
+                b.address_2 AS broker_address_2,
+                ba.name AS agent_name,
+                row_to_json(pt) AS payment_term,   -- 👈 grab whole payment term as JSON
+                s.id AS stop_id,
+                s.load_id AS stop_load_id,
+                s.type AS stop_type,
+                s.location AS stop_location,
+                s.time_type AS stop_time_type,
+                s.appointment_time AS stop_appointment_time,
+                s.window_start AS stop_window_start,
+                s.window_end AS stop_window_end
+            FROM loads l
+            LEFT JOIN brokers b ON b.id = l.broker_id
+            LEFT JOIN brokers_agents ba ON ba.id = l.agent_id
+            LEFT JOIN stops s ON s.load_id = l.id
+            LEFT JOIN payment_terms pt ON pt.id = l.payment_terms_id
+            WHERE l.id = $1
+            ORDER BY s.appointment_time, s.window_start
+            `,
             [id]
         );
+
 
         if (!result.rows.length)
             return createCorsResponse({ error: "Load not found" }, 404);
