@@ -30,6 +30,7 @@ export async function GET(req, { params }) {
         b.address AS broker_address_1,
         b.address_2 AS broker_address_2,
         ba.name AS agent_name,
+        pt.days_to_pay AS payment_days_to_pay,
         s.id AS stop_id,
         s.load_id AS stop_load_id,
         s.type AS stop_type,
@@ -42,6 +43,7 @@ export async function GET(req, { params }) {
       LEFT JOIN brokers b ON b.id = l.broker_id
       LEFT JOIN brokers_agents ba ON ba.id = l.agent_id
       LEFT JOIN stops s ON s.load_id = l.id
+      LEFT JOIN payment_terms pt ON pt.id = l.payment_terms_id
       WHERE l.id = $1
       ORDER BY s.appointment_time, s.window_start
     `,
