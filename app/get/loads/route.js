@@ -17,22 +17,27 @@ function createCorsResponse(data, status = 200) {
 
 export async function GET() {
     try {
-        // Query loads and their stops
+        // Query loads, stops, and payment terms
         const result = await pool.query(`
   SELECT 
     l.*,
     b.name AS broker_name,
     ba.name AS agent_name,
+    pt.days_to_pay AS payment_days_to_pay,
     s.id AS stop_id,
     s.load_id AS stop_load_id,
+    s.type AS stop_type,
     s.location AS stop_location,
     s.time_type AS stop_time_type,
     s.appointment_time AS stop_appointment_time,
     s.window_start AS stop_window_start,
-    s.window_end AS stop_window_end
+    s.window_end AS stop_window_end,
+    s.created_at AS stop_created_at,
+    s.updated_at AS stop_updated_at
   FROM loads l
   LEFT JOIN brokers b ON b.id = l.broker_id
   LEFT JOIN brokers_agents ba ON ba.id = l.agent_id
+  LEFT JOIN payment_terms pt ON pt.id = l.payment_terms_id
   LEFT JOIN stops s ON s.load_id = l.id
   ORDER BY l.id, s.appointment_time, s.window_start
 `)
@@ -63,7 +68,7 @@ export async function GET() {
                 })
             }
 
-            // Remove the temporary stop columns from load
+            // Remove temporary stop columns from load
             delete loadsMap.get(loadId).stop_id
             delete loadsMap.get(loadId).stop_load_id
             delete loadsMap.get(loadId).stop_type
