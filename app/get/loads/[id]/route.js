@@ -87,6 +87,7 @@ export async function GET(req, { params }) {
       payment_terms: row.payment_terms || null,
 
       stops: [],
+      docs: row.docs || [],
     }
 
     result.rows.forEach(r => {
