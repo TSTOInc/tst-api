@@ -1,97 +1,117 @@
-import { NextResponse } from "next/server";
-import pkg from "pg";
-const { Pool } = pkg;
+import { createCorsResponse, handleOptions } from "@/lib/cors"
+import pkg from "pg"
+const { Pool } = pkg
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-});
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+})
 
-function createCorsResponse(data, status = 200) {
-    const res = NextResponse.json(data, { status });
-    res.headers.set("Access-Control-Allow-Origin", "*");
-    res.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
-    res.headers.set("Access-Control-Allow-Headers", "Content-Type");
-    return res;
-}
-
-// GET a single load by ID
 export async function GET(req, { params }) {
-    const { id } = params; // Get table name and ID from the route
+  const { id } = params
 
-    if (!id) return createCorsResponse({ error: "Missing load ID" }, 400);
+  if (!id) return createCorsResponse(req, { error: "Missing load ID" }, 400)
 
-    try {
-        const result = await pool.query(
-            `
-            SELECT 
-                l.*,
-                b.name AS broker_name,
-                b.address AS broker_address_1,
-                b.address_2 AS broker_address_2,
-                ba.name AS agent_name,
-                row_to_json(pt) AS payment_term,   -- 👈 grab whole payment term as JSON
-                s.id AS stop_id,
-                s.load_id AS stop_load_id,
-                s.type AS stop_type,
-                s.location AS stop_location,
-                s.time_type AS stop_time_type,
-                s.appointment_time AS stop_appointment_time,
-                s.window_start AS stop_window_start,
-                s.window_end AS stop_window_end
-            FROM loads l
-            LEFT JOIN brokers b ON b.id = l.broker_id
-            LEFT JOIN brokers_agents ba ON ba.id = l.agent_id
-            LEFT JOIN stops s ON s.load_id = l.id
-            LEFT JOIN payment_terms pt ON pt.id = l.payment_terms_id
-            WHERE l.id = $1
-            ORDER BY s.appointment_time, s.window_start
-            `,
-            [id]
-        );
+  try {
+    const result = await pool.query(
+      `
+      SELECT 
+        l.*,
+        row_to_json(b) AS broker,
+        row_to_json(ba) AS agent,
+        row_to_json(pt) AS payment_terms,
+        row_to_json(t) AS truck,
+        row_to_json(e) AS equipment,
+        s.id AS stop_id,
+        s.load_id AS stop_load_id,
+        s.type AS stop_type,
+        s.location AS stop_location,
+        s.time_type AS stop_time_type,
+        s.appointment_time AS stop_appointment_time,
+        s.window_start AS stop_window_start,
+        s.window_end AS stop_window_end,
+        s.created_at AS stop_created_at,
+        s.updated_at AS stop_updated_at
+      FROM loads l
+      LEFT JOIN brokers b ON b.id = l.broker_id
+      LEFT JOIN brokers_agents ba ON ba.id = l.agent_id
+      LEFT JOIN payment_terms pt ON pt.id = l.payment_terms_id
+      LEFT JOIN trucks t ON t.id = l.truck_id
+      LEFT JOIN equipment e ON e.id = l.equipment_id
+      LEFT JOIN stops s ON s.load_id = l.id
+      WHERE l.id = $1
+      ORDER BY s.appointment_time, s.window_start
+      `,
+      [id]
+    )
 
+    if (!result.rows.length)
+      return createCorsResponse(req, { error: "Load not found" }, 404)
 
-        if (!result.rows.length)
-            return createCorsResponse({ error: "Load not found" }, 404);
+    const row = result.rows[0]
+    const load = {
+      id: row.id,
+      load_number: row.load_number,
+      invoice_number: row.invoice_number,
+      load_status: row.load_status,
+      commodity: row.commodity,
+      load_type: row.load_type,
+      length_ft: row.length_ft,
+      rate: row.rate,
+      instructions: row.instructions,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      invoiced_at: row.invoiced_at,
 
-        // Group stops by load
-        const load = { ...result.rows[0], stops: [] };
+      agent: row.agent
+        ? { id: row.agent.id, name: row.agent.name }
+        : { id: null, name: null },
 
-        result.rows.forEach((row) => {
-            if (row.stop_id) {
-                load.stops.push({
-                    id: row.stop_id,
-                    load_id: row.stop_load_id,
-                    type: row.stop_type,
-                    location: row.stop_location,
-                    time_type: row.stop_time_type,
-                    appointment_time: row.stop_appointment_time,
-                    window_start: row.stop_window_start,
-                    window_end: row.stop_window_end,
-                    created_at: row.stop_created_at,
-                    updated_at: row.stop_updated_at,
-                });
-            }
+      truck: row.truck
+        ? { id: row.truck.id, truck_number: row.truck.truck_number }
+        : null,
 
-            // Remove stop columns from load object
-            delete load.stop_id;
-            delete load.stop_load_id;
-            delete load.stop_type;
-            delete load.stop_location;
-            delete load.stop_time_type;
-            delete load.stop_appointment_time;
-            delete load.stop_window_start;
-            delete load.stop_window_end;
-            delete load.stop_created_at;
-            delete load.stop_updated_at;
-        });
+      equipment: row.equipment
+        ? { id: row.equipment.id, equipment_number: row.equipment.equipment_number }
+        : null,
 
-        return createCorsResponse(load);
-    } catch (error) {
-        return createCorsResponse({ error: error.message }, 500);
+      broker: row.broker
+        ? {
+            id: row.broker.id,
+            name: row.broker.name,
+            address_1: row.broker.address,
+            address_2: row.broker.address_2,
+          }
+        : null,
+
+      payment_terms: row.payment_terms || null,
+
+      stops: [],
     }
+
+    result.rows.forEach(r => {
+      if (r.stop_id) {
+        load.stops.push({
+          id: r.stop_id,
+          load_id: r.stop_load_id,
+          type: r.stop_type,
+          location: r.stop_location,
+          time_type: r.stop_time_type,
+          appointment_time: r.stop_appointment_time,
+          window_start: r.stop_window_start,
+          window_end: r.stop_window_end,
+          created_at: r.stop_created_at,
+          updated_at: r.stop_updated_at,
+        })
+      }
+    })
+
+    return createCorsResponse(req, load)
+  } catch (error) {
+    return createCorsResponse(req, { error: error.message }, 500)
+  }
 }
 
-export async function OPTIONS() {
-    return createCorsResponse({}, 204);
+export async function OPTIONS(req) {
+  return handleOptions(req)
 }
