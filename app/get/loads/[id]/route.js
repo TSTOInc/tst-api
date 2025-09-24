@@ -62,6 +62,7 @@ export async function GET(req, { params }) {
       created_at: row.created_at,
       updated_at: row.updated_at,
       invoiced_at: row.invoiced_at,
+      progress: row.progress,
 
       agent: row.agent
         ? { id: row.agent.id, name: row.agent.name }
